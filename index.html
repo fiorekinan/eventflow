@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EventFlow — workspace pengelolaan event.">
+  <title>EventFlow</title>
+  <link rel="stylesheet" href="Assets/styles.css">
+  <link rel="stylesheet" href="Assets/polish.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+      <div class="sidebar-top"><a class="brand" href="#dashboard" data-view-link="dashboard"><span>✦</span> EVENT<span>FLOW</span></a><button class="icon-button close-menu" id="close-menu" type="button" aria-label="Tutup navigasi">×</button></div>
+      <div class="workspace"><span class="workspace-dot" aria-hidden="true"></span><div><small>WORKSPACE</small><strong>Nara Studio</strong></div></div>
+      <nav class="navigation" aria-label="Menu aplikasi">
+        <button class="nav-item is-active" type="button" data-view="dashboard" aria-current="page"><span>▦</span>Dashboard</button>
+        <button class="nav-item" type="button" data-view="event"><span>◇</span>Data Event <b id="event-count">3</b></button>
+        <button class="nav-item" type="button" data-view="registrasi"><span>◌</span>Pendaftaran</button>
+        <button class="nav-item" type="button" data-view="pendaftar"><span>♙</span>Data Pendaftar</button>
+        <button class="nav-item" type="button" data-view="presensi"><span>✓</span>Presensi</button>
+      </nav>
+      <div class="profile"><div class="avatar" aria-hidden="true">NP</div><div><strong>Nara Putri</strong><small>Administrator</small></div></div>
+    </aside>
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+    <main class="content">
+      <header class="topbar"><button class="icon-button menu-button" id="open-menu" type="button" aria-label="Buka navigasi" aria-controls="sidebar" aria-expanded="false">☰</button><p class="breadcrumb" id="breadcrumb">OVERVIEW <strong>/ Dashboard</strong></p><div class="top-avatar" aria-label="Nara Putri">NP</div></header>
+      <div id="app" tabindex="-1" aria-live="polite"><div class="loading-skeleton" aria-label="Memuat tampilan"><span></span><span></span><span></span></div></div>
+    </main>
+  </div>
+  <dialog class="modal" id="event-dialog" aria-labelledby="event-dialog-title">
+    <form id="event-form" novalidate>
+      <div class="modal-heading"><div><p class="eyebrow">DATA EVENT</p><h2 id="event-dialog-title">Buat event</h2></div><button class="icon-button" type="button" id="close-dialog" aria-label="Tutup formulir">×</button></div>
+      <input type="hidden" id="event-id" name="id">
+      <div class="form-grid">
+        <label class="field field-full">Nama event<input id="event-title" name="title" required maxlength="80" placeholder="Contoh: Product Camp 2026"></label>
+        <label class="field">Kategori<select id="event-category" name="category" required><option value="">Pilih kategori</option><option>Konferensi</option><option>Workshop</option><option>Meetup</option><option>Seminar</option></select></label>
+        <label class="field">Tanggal<input id="event-date" name="date" type="date" required></label>
+        <label class="field">Lokasi<input id="event-location" name="location" required maxlength="80" placeholder="Nama venue"></label>
+        <label class="field">Kapasitas<input id="event-capacity" name="capacity" type="number" required min="1" max="100000" placeholder="100"></label>
+      </div>
+      <p class="form-error" id="event-error" role="alert"></p>
+      <div class="modal-actions"><button class="secondary-button" type="button" data-save-status="Draft">Simpan draft</button><button class="primary-button" type="button" data-save-status="Published">Terbitkan event</button></div>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-message"></span><button type="button" id="close-toast" aria-label="Tutup notifikasi">×</button></div>
+  <script src="Assets/app.js"></script>
+</body>
+</html>

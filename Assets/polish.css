@@ -1,0 +1,67 @@
+/* Penyelesaian visual: override terpisah agar token dan komponen utama tetap mudah dirawat. */
+:root {
+  --focus-ring: rgba(249, 115, 22, .32);
+}
+
+html { background: var(--page); }
+body { min-width: 320px; }
+button, input, select { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+
+.content { min-height: 100vh; }
+.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.metric-card, .panel, .event-card, .registration-result { transition: transform .2s ease, box-shadow .2s ease; }
+.event-card:hover { transform: translateY(-2px); box-shadow: 0 20px 38px rgba(60, 31, 14, .14); }
+.primary-button:hover { background: #e9650d; }
+.secondary-button:hover, .outline-button:hover, .action-button:hover { border-color: #c98c59; background: #fff2e6; }
+.nav-item, .primary-button, .secondary-button, .outline-button, .action-button { transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+.primary-button:active, .secondary-button:active, .action-button:active { transform: translateY(1px); }
+.field input, .field select, .search-field input, .filter-field select { transition: border-color .16s ease, box-shadow .16s ease; }
+.field input:focus, .field select:focus, .search-field input:focus, .filter-field select:focus { box-shadow: 0 0 0 4px var(--focus-ring); }
+.panel-heading, .view-toolbar { gap: 16px; }
+.view-toolbar > div, .page-heading > div { min-width: 0; }
+.event-card { display: flex; flex-direction: column; }
+.card-actions { margin-top: auto; }
+.event-card h2, .event-meta, .featured-event h3, .featured-event p, .detail-panel dd { overflow-wrap: anywhere; }
+.toast { min-height: 48px; }
+.loading-skeleton { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 38px 0; }
+.loading-skeleton span { height: 158px; border-radius: 16px; background: linear-gradient(100deg, #f0e2d3 25%, #fff8f0 37%, #f0e2d3 63%); background-size: 200% 100%; animation: eventflow-shimmer 1.2s infinite; }
+
+@keyframes eventflow-shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 1180px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 840px) {
+  .content { padding-inline: 20px; }
+  .registrant-layout, .checkin-layout, .registration-layout { grid-template-columns: 1fr; }
+  .detail-panel { order: -1; }
+}
+
+@media (max-width: 720px) {
+  .metrics { grid-template-columns: 1fr; }
+  .page-heading, .view-toolbar { gap: 14px; }
+  .page-heading .primary-button, .view-toolbar > .primary-button, .view-toolbar > .secondary-button { flex: 0 0 auto; }
+  .event-grid { grid-template-columns: 1fr; }
+  .event-card { min-height: 220px; }
+  .table-wrap { overflow: visible; }
+  table, tbody, tr, td { display: block; min-width: 0; width: 100%; }
+  table thead { display: none; }
+  table tbody { display: grid; gap: 10px; }
+  table tr { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fffdfa; box-shadow: 0 4px 16px rgba(60, 31, 14, .05); }
+  table td { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border: 0; text-align: right; }
+  table td::before { content: attr(data-label); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .4px; text-align: left; text-transform: uppercase; }
+  table td:first-child { display: block; text-align: left; }
+  table td:first-child::before { display: none; }
+  table td:last-child { align-items: center; }
+  .table-empty { display: block; text-align: center; }
+  .table-empty::before { display: none; }
+  .loading-skeleton { grid-template-columns: 1fr; padding: 27px 0; }
+  .loading-skeleton span { height: 130px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
