@@ -5,6 +5,7 @@ const dialog = document.querySelector('#event-dialog');
 const eventForm = document.querySelector('#event-form');
 const toast = document.querySelector('#toast');
 const toastMessage = document.querySelector('#toast-message');
+
 let currentView = 'dashboard';
 let toastTimer;
 let lastRegistration = null;
@@ -13,57 +14,680 @@ let checkInEventId = 'evt-101';
 let checkInFeedback = null;
 let registrantFilters = { query: '', eventId: '', status: '' };
 
-const state = { nextEventId: 104, nextRegistrantId: 6, events: [
-  { id: 'evt-101', title: 'Tech Nexus Summit 2026', category: 'Konferensi', date: '2026-09-18', location: 'The Kasablanka', capacity: 500, registered: 3, status: 'Published' },
-  { id: 'evt-102', title: 'Creative Leadership Forum', category: 'Seminar', date: '2026-09-24', location: 'South Quarter', capacity: 200, registered: 2, status: 'Published' },
-  { id: 'evt-103', title: 'Product Design Meetup', category: 'Meetup', date: '2026-10-02', location: 'M Bloc Space', capacity: 150, registered: 0, status: 'Draft' }
-], registrants: [
-  { id: 'reg-001', eventId: 'evt-101', code: 'EF-101-0001', name: 'Alexandra Leclerc', email: 'alexandra@contoh.id', phone: '081234567801', present: true, checkedInAt: '09:42' },
-  { id: 'reg-002', eventId: 'evt-101', code: 'EF-101-0002', name: 'Bagas Pratama', email: 'bagas@contoh.id', phone: '081234567802', present: true, checkedInAt: '09:38' },
-  { id: 'reg-003', eventId: 'evt-101', code: 'EF-101-0003', name: 'Citra Lestari', email: 'citra@contoh.id', phone: '081234567803', present: false, checkedInAt: null },
-  { id: 'reg-004', eventId: 'evt-102', code: 'EF-102-0001', name: 'Dimas Ardiansyah', email: 'dimas@contoh.id', phone: '081234567804', present: true, checkedInAt: '08:57' },
-  { id: 'reg-005', eventId: 'evt-102', code: 'EF-102-0002', name: 'Eka Permata', email: 'eka@contoh.id', phone: '081234567805', present: false, checkedInAt: null }
-] };
+const state = {
+  nextEventId: 104,
+  nextRegistrantId: 6,
+  events: [
+    { id: 'evt-101', title: 'Tech Nexus Summit 2026', category: 'Konferensi', date: '2026-09-18', location: 'The Kasablanka', capacity: 500, registered: 3, status: 'Published' },
+    { id: 'evt-102', title: 'Creative Leadership Forum', category: 'Seminar', date: '2026-09-24', location: 'South Quarter', capacity: 200, registered: 2, status: 'Published' },
+    { id: 'evt-103', title: 'Product Design Meetup', category: 'Meetup', date: '2026-10-02', location: 'M Bloc Space', capacity: 150, registered: 0, status: 'Draft' }
+  ],
+  registrants: [
+    { id: 'reg-001', eventId: 'evt-101', code: 'EF-101-0001', name: 'Alexandra Leclerc', email: 'alexandrasaintmleux@gmail.com', phone: '081234567801', present: true, checkedInAt: '09:42' },
+    { id: 'reg-002', eventId: 'evt-101', code: 'EF-101-0002', name: 'Lando Norris', email: 'lando@gmail.com', phone: '081234567802', present: true, checkedInAt: '09:38' },
+    { id: 'reg-003', eventId: 'evt-101', code: 'EF-101-0003', name: 'Jessica Alba', email: 'albajessica@gmail.com', phone: '081234567803', present: false, checkedInAt: null },
+    { id: 'reg-004', eventId: 'evt-102', code: 'EF-102-0001', name: 'Oscar Piastri', email: 'oscarpiastri81@gmail.com', phone: '081234567804', present: true, checkedInAt: '08:57' },
+    { id: 'reg-005', eventId: 'evt-102', code: 'EF-102-0002', name: 'Jude Bellingham', email: 'judebell44gmail.com', phone: '081234567805', present: false, checkedInAt: null }
+  ]
+};
 
-function formatNumber(value) { return new Intl.NumberFormat('id-ID').format(value); }
-function formatDate(value) { return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`)); }
-function dateParts(value) { const date = new Date(`${value}T00:00:00`); return { day: date.getDate(), month: new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date).toUpperCase() }; }
-function publishedEvents() { return state.events.filter((event) => event.status === 'Published'); }
-function totalRegistered() { return state.registrants.length; }
-function presentCount() { return state.registrants.filter((registrant) => registrant.present).length; }
-function eventById(id) { return state.events.find((event) => event.id === id); }
-function statusBadge(status) { return `<span class="status-badge ${status === 'Draft' ? 'draft' : ''}">${status === 'Published' ? '● Terbit' : '● Draft'}</span>`; }
-function presenceBadge(present) { return `<span class="presence-badge ${present ? 'present' : ''}">${present ? '✓ Hadir' : '○ Belum hadir'}</span>`; }
-function setMenu(open) { sidebar.classList.toggle('open', open); overlay.classList.toggle('show', open); document.querySelector('#open-menu').setAttribute('aria-expanded', String(open)); }
-function showToast(message) { clearTimeout(toastTimer); toastMessage.textContent = message; toast.classList.add('show'); toastTimer = setTimeout(() => toast.classList.remove('show'), 3500); }
-function updateNavigation() { document.querySelectorAll('[data-view]').forEach((button) => { const active = button.dataset.view === currentView; button.classList.toggle('is-active', active); button.toggleAttribute('aria-current', active); }); document.querySelector('#event-count').textContent = state.events.length; }
-function eventOptions(selected = '') { return `<option value="">Semua event</option>${state.events.map((event) => `<option value="${event.id}" ${event.id === selected ? 'selected' : ''}>${event.title}</option>`).join('')}`; }
+function formatNumber(value) {
+  return new Intl.NumberFormat('id-ID').format(value);
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`));
+}
+
+function dateParts(value) {
+  const date = new Date(`${value}T00:00:00`);
+  return {
+    day: date.getDate(),
+    month: new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date).toUpperCase()
+  };
+}
+
+function publishedEvents() {
+  return state.events.filter((event) => event.status === 'Published');
+}
+
+function totalRegistered() {
+  return state.registrants.length;
+}
+
+function presentCount() {
+  return state.registrants.filter((registrant) => registrant.present).length;
+}
+
+function eventById(id) {
+  return state.events.find((event) => event.id === id);
+}
+
+function statusBadge(status) {
+  return `<span class="status-badge ${status === 'Draft' ? 'draft' : ''}">${status === 'Published' ? '● Terbit' : '● Draft'}</span>`;
+}
+
+function presenceBadge(present) {
+  return `<span class="presence-badge ${present ? 'present' : ''}">${present ? '✓ Hadir' : '○ Belum hadir'}</span>`;
+}
+
+function setMenu(open) {
+  sidebar.classList.toggle('open', open);
+  overlay.classList.toggle('show', open);
+  document.querySelector('#open-menu').setAttribute('aria-expanded', String(open));
+}
+
+function showToast(message) {
+  clearTimeout(toastTimer);
+  toastMessage.textContent = message;
+  toast.classList.add('show');
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+function updateNavigation() {
+  document.querySelectorAll('[data-view]').forEach((button) => {
+    const active = button.dataset.view === currentView;
+    button.classList.toggle('is-active', active);
+    button.toggleAttribute('aria-current', active);
+  });
+  document.querySelector('#event-count').textContent = state.events.length;
+}
+
+function eventOptions(selected = '') {
+  return `<option value="">Semua event</option>${state.events.map((event) => `<option value="${event.id}" ${event.id === selected ? 'selected' : ''}>${event.title}</option>`).join('')}`;
+}
 
 function renderDashboard() {
-  const upcoming = publishedEvents().sort((a, b) => a.date.localeCompare(b.date)); const featured = upcoming[0]; const total = totalRegistered(); const capacity = state.events.reduce((sum, event) => sum + event.capacity, 0);
-  app.innerHTML = `<section class="page-heading"><div><p class="eyebrow">CONTROL CENTER · 05 SEPTEMBER 2026</p><h1>Selamat Datang, Fio ✦</h1><p class="lede">Pantau event dan peserta Anda hari ini.</p></div><button class="primary-button" type="button" data-create-event>＋ Buat event</button></section><section class="metrics" aria-label="Ringkasan event"><article class="metric-card"><div class="metric-icon orange">◇</div><div class="metric-label">Event aktif</div><strong>${publishedEvents().length}</strong><p><span class="up">● Terbit</span> dan menerima pendaftaran</p></article><article class="metric-card"><div class="metric-icon amber">♙</div><div class="metric-label">Total pendaftar</div><strong>${formatNumber(total)}</strong><p>Peserta dari seluruh event</p></article><article class="metric-card"><div class="metric-icon green">✓</div><div class="metric-label">Sudah hadir</div><strong>${formatNumber(presentCount())}</strong><p>${total ? Math.round(presentCount() / total * 100) : 0}% dari total pendaftar</p></article><article class="metric-card"><div class="metric-icon amber">◒</div><div class="metric-label">Kapasitas terpakai</div><strong>${capacity ? Math.round(total / capacity * 100) : 0}%</strong><p>${formatNumber(total)} dari ${formatNumber(capacity)} kursi</p></article></section><section class="dashboard-grid"><article class="panel"><div class="panel-heading"><div><p class="section-kicker">UPCOMING</p><h2>Event terdekat</h2></div><button class="action-button" type="button" data-switch-view="event">Kelola event</button></div>${featured ? `<div class="featured-event"><div class="event-date"><span>${dateParts(featured.date).month}</span><strong>${dateParts(featured.date).day}</strong></div><div class="event-main">${statusBadge(featured.status)}<h3>${featured.title}</h3><p>${formatDate(featured.date)} · ${featured.location}</p><div class="capacity"><span>${featured.registered} peserta terdaftar</span><strong>${featured.capacity} kapasitas</strong></div><div class="progress"><i style="width:${featured.registered / featured.capacity * 100}%"></i></div></div></div>` : '<div class="empty-state">Belum ada event terbit.</div>'}</article><article class="panel"><div class="panel-heading"><div><p class="section-kicker">LIVE ACTIVITY</p><h2>Presensi terbaru</h2></div><button class="action-button" type="button" data-switch-view="presensi">Buka presensi</button></div>${state.registrants.filter((registrant) => registrant.present).slice(0, 4).map((registrant) => `<div class="presence-row"><div class="checkmark">✓</div><div class="person"><strong>${registrant.name}</strong><small>${eventById(registrant.eventId).title}</small></div><time>${registrant.checkedInAt}</time></div>`).join('') || '<div class="empty-state">Belum ada presensi.</div>'}</article></section>`;
+  const upcoming = publishedEvents().sort((a, b) => a.date.localeCompare(b.date));
+  const featured = upcoming[0];
+  const total = totalRegistered();
+  const capacity = state.events.reduce((sum, event) => sum + event.capacity, 0);
+  
+  app.innerHTML = `
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">CONTROL CENTER · 05 SEPTEMBER 2026</p>
+        <h1>Selamat Datang, Fio ✦</h1>
+        <p class="lede">Pantau event dan peserta Anda hari ini.</p>
+      </div>
+      <button class="primary-button" type="button" data-create-event>＋ Buat event</button>
+    </section>
+    
+    <section class="metrics" aria-label="Ringkasan event">
+      <article class="metric-card">
+        <div class="metric-icon orange">◇</div>
+        <div class="metric-label">Event aktif</div>
+        <strong>${publishedEvents().length}</strong>
+        <p><span class="up">● Terbit</span> dan menerima pendaftaran</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-icon amber">♙</div>
+        <div class="metric-label">Total pendaftar</div>
+        <strong>${formatNumber(total)}</strong>
+        <p>Peserta dari seluruh event</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-icon green">✓</div>
+        <div class="metric-label">Sudah hadir</div>
+        <strong>${formatNumber(presentCount())}</strong>
+        <p>${total ? Math.round(presentCount() / total * 100) : 0}% dari total pendaftar</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-icon amber">◒</div>
+        <div class="metric-label">Kapasitas terpakai</div>
+        <strong>${capacity ? Math.round(total / capacity * 100) : 0}%</strong>
+        <p>${formatNumber(total)} dari ${formatNumber(capacity)} kursi</p>
+      </article>
+    </section>
+    
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">UPCOMING</p>
+            <h2>Event terdekat</h2>
+          </div>
+          <button class="action-button" type="button" data-switch-view="event">Kelola event</button>
+        </div>
+        ${featured ? `
+          <div class="featured-event">
+            <div class="event-date">
+              <span>${dateParts(featured.date).month}</span>
+              <strong>${dateParts(featured.date).day}</strong>
+            </div>
+            <div class="event-main">
+              ${statusBadge(featured.status)}
+              <h3>${featured.title}</h3>
+              <p>${formatDate(featured.date)} · ${featured.location}</p>
+              <div class="capacity">
+                <span>${featured.registered} peserta terdaftar</span>
+                <strong>${featured.capacity} kapasitas</strong>
+              </div>
+              <div class="progress"><i style="width:${featured.registered / featured.capacity * 100}%"></i></div>
+            </div>
+          </div>
+        ` : '<div class="empty-state">Belum ada event terbit.</div>'}
+      </article>
+      
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">LIVE ACTIVITY</p>
+            <h2>Presensi terbaru</h2>
+          </div>
+          <button class="action-button" type="button" data-switch-view="presensi">Buka presensi</button>
+        </div>
+        ${state.registrants.filter((registrant) => registrant.present).slice(0, 4).map((registrant) => `
+          <div class="presence-row">
+            <div class="checkmark">✓</div>
+            <div class="person">
+              <strong>${registrant.name}</strong>
+              <small>${eventById(registrant.eventId).title}</small>
+            </div>
+            <time>${registrant.checkedInAt}</time>
+          </div>
+        `).join('') || '<div class="empty-state">Belum ada presensi.</div>'}
+      </article>
+    </section>
+  `;
 }
-function eventCard(event) { const full = event.registered >= event.capacity; return `<article class="event-card"><div class="event-card-head">${statusBadge(event.status)}<span class="section-kicker">${event.category}</span></div><h2>${event.title}</h2><p class="event-meta">${formatDate(event.date)} · ${event.location}</p><div class="event-capacity"><span>${event.registered} pendaftar</span><strong>${event.capacity} kapasitas</strong></div><div class="progress"><i style="width:${Math.min(100, event.registered / event.capacity * 100)}%"></i></div><div class="card-actions"><button class="action-button" type="button" data-edit="${event.id}">Ubah</button>${event.status === 'Draft' ? `<button class="action-button" type="button" data-publish="${event.id}">Terbitkan</button>` : ''}<button class="action-button danger" type="button" data-delete="${event.id}" aria-label="Hapus ${event.title}">Hapus</button></div>${full ? '<p class="form-error">Kapasitas telah penuh.</p>' : ''}</article>`; }
-function renderEvents() { app.innerHTML = `<section class="view-toolbar"><div><p class="eyebrow">MANAJEMEN EVENT</p><h1>Data event</h1></div><button class="primary-button" type="button" data-create-event>＋ Buat event</button></section><section class="event-grid" aria-label="Daftar event">${state.events.map(eventCard).join('') || '<div class="empty-state">Belum ada event. Buat event pertama Anda.</div>'}</section>`; }
-function registrationOptions() { return publishedEvents().filter((event) => event.registered < event.capacity).map((event) => `<option value="${event.id}">${event.title} — ${event.registered}/${event.capacity}</option>`).join(''); }
-function renderRegistration() { const options = registrationOptions(); app.innerHTML = `<section class="view-toolbar"><div><p class="eyebrow">PENDAFTARAN PUBLIK</p><h1>Daftar ke event</h1></div></section>${lastRegistration ? `<section class="registration-result"><div><p class="eyebrow">PENDAFTARAN BERHASIL</p><strong>${lastRegistration.name}, pendaftaran Anda tercatat.</strong><p class="lede">Simpan kode berikut untuk kebutuhan presensi.</p></div><code class="registration-code">${lastRegistration.code}</code></section>` : ''}<section class="registration-layout"><form class="panel form-panel" id="registration-form" novalidate><h2>Data peserta</h2>${options ? `<div class="form-grid"><label class="field field-full">Event<select name="eventId" required><option value="">Pilih event</option>${options}</select><small>Hanya event terbit dengan kapasitas tersedia yang ditampilkan.</small></label><label class="field field-full">Nama lengkap<input name="name" required maxlength="80" autocomplete="name" placeholder="Nama sesuai identitas"></label><label class="field">Email<input name="email" type="email" required autocomplete="email" placeholder="nama@contoh.com"></label><label class="field">Nomor WhatsApp<input name="phone" type="tel" required pattern="[0-9+() -]{8,20}" autocomplete="tel" placeholder="0812 3456 7890"></label></div><p class="form-error" id="registration-error" role="alert"></p><button class="primary-button" type="submit">Kirim pendaftaran</button>` : '<div class="empty-state">Belum ada event terbit yang tersedia untuk pendaftaran.</div>'}</form><aside class="panel registration-note"><p class="section-kicker">SEBELUM MENDAFTAR</p><h2>Proses singkat dan jelas</h2><p>Kode registrasi dibuat di perangkat ini setelah formulir berhasil dikirim.</p><ul><li>Pastikan nama dan email sudah benar.</li><li>Satu pengiriman menambah satu peserta pada kapasitas event.</li><li>Data bersifat mock dan tersimpan selama halaman terbuka.</li></ul></aside></section>`; }
-function filteredRegistrants() { const { query, eventId, status } = registrantFilters; return state.registrants.filter((registrant) => (!eventId || registrant.eventId === eventId) && (!status || String(registrant.present) === status) && (!query || `${registrant.name} ${registrant.email} ${registrant.code}`.toLowerCase().includes(query))); }
-function detailPanel() { const registrant = state.registrants.find((item) => item.id === selectedRegistrantId); if (!registrant) return `<aside class="panel detail-panel"><p class="section-kicker">DETAIL PESERTA</p><h2>Pilih peserta</h2><p class="lede">Gunakan tombol Detail pada tabel untuk melihat informasi lengkap.</p></aside>`; const event = eventById(registrant.eventId); return `<aside class="panel detail-panel"><p class="section-kicker">DETAIL PESERTA</p><h2>${registrant.name}</h2>${presenceBadge(registrant.present)}<dl><div><dt>Kode registrasi</dt><dd>${registrant.code}</dd></div><div><dt>Email</dt><dd>${registrant.email}</dd></div><div><dt>WhatsApp</dt><dd>${registrant.phone}</dd></div><div><dt>Event</dt><dd>${event.title}</dd></div><div><dt>Check-in</dt><dd>${registrant.checkedInAt || 'Belum check-in'}</dd></div></dl></aside>`; }
-function registrantRows(items) { return items.map((registrant) => `<tr><td data-label="Peserta"><strong>${registrant.name}</strong><small>${registrant.email}</small></td><td data-label="Event">${eventById(registrant.eventId).title}</td><td data-label="Kode"><code>${registrant.code}</code></td><td data-label="Status">${presenceBadge(registrant.present)}</td><td data-label="Aksi"><button class="action-button" type="button" data-detail="${registrant.id}">Detail</button></td></tr>`).join(''); }
-function renderRegistrants() { const items = filteredRegistrants(); app.innerHTML = `<section class="view-toolbar"><div><p class="eyebrow">PESERTA EVENT</p><h1>Data pendaftar</h1></div><button class="secondary-button" type="button" data-switch-view="registrasi">＋ Tambah pendaftar</button></section><section class="registrant-layout"><div class="panel table-panel"><div class="filter-row"><label class="search-field">Cari peserta atau kode<input id="registrant-search" type="search" value="${registrantFilters.query}" placeholder="Nama atau kode registrasi"></label><label class="filter-field">Event<select id="registrant-event-filter">${eventOptions(registrantFilters.eventId)}</select></label><label class="filter-field">Status<select id="registrant-status-filter"><option value="">Semua status</option><option value="true" ${registrantFilters.status === 'true' ? 'selected' : ''}>Sudah hadir</option><option value="false" ${registrantFilters.status === 'false' ? 'selected' : ''}>Belum hadir</option></select></label></div><p class="table-summary"><strong>${items.length}</strong> peserta ditemukan</p><div class="table-wrap"><table><thead><tr><th>Peserta</th><th>Event</th><th>Kode</th><th>Status</th><th><span class="sr-only">Aksi</span></th></tr></thead><tbody>${registrantRows(items) || '<tr><td colspan="5" class="table-empty">Tidak ada peserta yang sesuai.</td></tr>'}</tbody></table></div></div>${detailPanel()}</section>`; }
-function renderCheckIn() { const options = publishedEvents().map((event) => `<option value="${event.id}" ${event.id === checkInEventId ? 'selected' : ''}>${event.title}</option>`).join(''); const result = checkInFeedback ? `<section class="checkin-result ${checkInFeedback.type}"><p class="eyebrow">${checkInFeedback.type === 'success' ? 'CHECK-IN BERHASIL' : checkInFeedback.type === 'pending' ? 'KONFIRMASI PRESENSI' : 'CHECK-IN TIDAK DAPAT DIPROSES'}</p><strong>${checkInFeedback.title}</strong><p>${checkInFeedback.message}</p>${checkInFeedback.type === 'pending' ? `<button class="primary-button" type="button" data-confirm-checkin="${checkInFeedback.id}">Konfirmasi kehadiran</button>` : ''}</section>` : ''; app.innerHTML = `<section class="view-toolbar"><div><p class="eyebrow">HARI-H EVENT</p><h1>Presensi peserta</h1></div></section><section class="checkin-layout"><form class="panel checkin-form" id="checkin-form" novalidate><p class="section-kicker">CHECK-IN MANUAL</p><h2>Masukkan kode registrasi</h2><label class="field">Event<select name="eventId" id="checkin-event" required>${options}</select></label><label class="field">Kode registrasi<input name="code" required autocomplete="off" placeholder="Contoh: EF-101-0003"></label><p class="form-error" id="checkin-error" role="alert"></p><button class="primary-button" type="submit">Cari peserta</button></form><aside class="panel checkin-note"><p class="section-kicker">PANDUAN</p><h2>Satu kali presensi</h2><p>Sistem memeriksa kecocokan kode dan event sebelum kehadiran dapat dikonfirmasi.</p><ul><li>Kode tidak ditemukan akan ditolak.</li><li>Kode dari event lain akan ditandai.</li><li>Check-in ulang tidak dapat diproses.</li></ul></aside></section>${result}`; }
-function render() { if (currentView === 'event') renderEvents(); else if (currentView === 'registrasi') renderRegistration(); else if (currentView === 'pendaftar') renderRegistrants(); else if (currentView === 'presensi') renderCheckIn(); else renderDashboard(); updateNavigation(); const titles = { dashboard: 'Dashboard', event: 'Data Event', registrasi: 'Pendaftaran', pendaftar: 'Data Pendaftar', presensi: 'Presensi' }; document.querySelector('#breadcrumb').innerHTML = `OVERVIEW <strong>/ ${titles[currentView]}</strong>`; }
-function openEventDialog(id = '') { const event = eventById(id); eventForm.reset(); document.querySelector('#event-error').textContent = ''; document.querySelector('#event-dialog-title').textContent = event ? 'Ubah event' : 'Buat event'; document.querySelector('#event-id').value = event?.id || ''; if (event) ['title', 'category', 'date', 'location', 'capacity'].forEach((field) => { document.querySelector(`#event-${field}`).value = event[field]; }); dialog.showModal(); document.querySelector('#event-title').focus(); }
-function saveEvent(status) { if (!eventForm.reportValidity()) return; const fields = Object.fromEntries(new FormData(eventForm)); const id = fields.id || `evt-${state.nextEventId++}`; const existing = eventById(id); const event = { id, title: fields.title.trim(), category: fields.category, date: fields.date, location: fields.location.trim(), capacity: Number(fields.capacity), registered: existing?.registered || 0, status }; if (event.capacity < event.registered) { document.querySelector('#event-error').textContent = 'Kapasitas tidak boleh lebih kecil dari jumlah pendaftar saat ini.'; return; } if (existing) state.events[state.events.indexOf(existing)] = event; else state.events.push(event); dialog.close(); render(); showToast(`Event ${status === 'Published' ? 'diterbitkan' : 'disimpan sebagai draft'}.`); }
-function registerParticipant(form) { if (!form.reportValidity()) return; const fields = Object.fromEntries(new FormData(form)); const event = eventById(fields.eventId); if (!event || event.status !== 'Published' || event.registered >= event.capacity) { document.querySelector('#registration-error').textContent = 'Event tidak tersedia. Pilih event lain.'; return; } event.registered += 1; const code = `EF-${event.id.replace('evt-', '')}-${String(event.registered).padStart(4, '0')}`; state.registrants.push({ id: `reg-${String(state.nextRegistrantId++).padStart(3, '0')}`, eventId: event.id, code, name: fields.name.trim(), email: fields.email.trim(), phone: fields.phone.trim(), present: false, checkedInAt: null }); lastRegistration = { name: fields.name.trim(), code }; renderRegistration(); showToast('Pendaftaran berhasil disimpan.'); }
-function processCheckIn(form) { if (!form.reportValidity()) return; const fields = Object.fromEntries(new FormData(form)); checkInEventId = fields.eventId; const code = fields.code.trim().toUpperCase(); const registrant = state.registrants.find((item) => item.code === code); if (!registrant) checkInFeedback = { type: 'error', title: 'Kode tidak ditemukan', message: `Kode ${code} tidak terdaftar pada data peserta.` }; else if (registrant.eventId !== fields.eventId) checkInFeedback = { type: 'error', title: 'Event tidak sesuai', message: `${registrant.name} terdaftar untuk ${eventById(registrant.eventId).title}.` }; else if (registrant.present) checkInFeedback = { type: 'error', title: 'Presensi sudah tercatat', message: `${registrant.name} sudah check-in pada ${registrant.checkedInAt}.` }; else checkInFeedback = { type: 'pending', id: registrant.id, title: registrant.name, message: `${registrant.code} · ${eventById(registrant.eventId).title}` }; renderCheckIn(); }
-function confirmCheckIn(id) { const registrant = state.registrants.find((item) => item.id === id); if (!registrant || registrant.present) return; registrant.present = true; registrant.checkedInAt = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()); checkInFeedback = { type: 'success', title: `${registrant.name} berhasil check-in`, message: `Kehadiran tercatat pada ${registrant.checkedInAt}.` }; renderCheckIn(); showToast('Presensi berhasil dicatat.'); }
 
-document.querySelector('#open-menu').addEventListener('click', () => setMenu(true)); document.querySelector('#close-menu').addEventListener('click', () => setMenu(false)); overlay.addEventListener('click', () => setMenu(false)); document.querySelector('#close-dialog').addEventListener('click', () => dialog.close()); document.querySelector('#close-toast').addEventListener('click', () => toast.classList.remove('show'));
-document.querySelector('[data-view-link]').addEventListener('click', (event) => { event.preventDefault(); currentView = 'dashboard'; render(); });
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && sidebar.classList.contains('open')) { setMenu(false); document.querySelector('#open-menu').focus(); } });
-document.addEventListener('input', (event) => { if (event.target.id === 'registrant-search') { registrantFilters.query = event.target.value.toLowerCase().trim(); renderRegistrants(); document.querySelector('#registrant-search').focus(); } }); document.addEventListener('change', (event) => { if (event.target.id === 'registrant-event-filter') { registrantFilters.eventId = event.target.value; renderRegistrants(); } if (event.target.id === 'registrant-status-filter') { registrantFilters.status = event.target.value; renderRegistrants(); } });
-document.addEventListener('click', (event) => { const view = event.target.closest('[data-view]'); if (view) { currentView = view.dataset.view; render(); setMenu(false); return; } if (event.target.closest('[data-create-event]')) { openEventDialog(); return; } const switchView = event.target.closest('[data-switch-view]'); if (switchView) { currentView = switchView.dataset.switchView; render(); return; } const edit = event.target.closest('[data-edit]'); if (edit) { openEventDialog(edit.dataset.edit); return; } const publish = event.target.closest('[data-publish]'); if (publish) { eventById(publish.dataset.publish).status = 'Published'; render(); showToast('Event diterbitkan.'); return; } const detail = event.target.closest('[data-detail]'); if (detail) { selectedRegistrantId = detail.dataset.detail; renderRegistrants(); return; } const confirm = event.target.closest('[data-confirm-checkin]'); if (confirm) { confirmCheckIn(confirm.dataset.confirmCheckin); return; } const remove = event.target.closest('[data-delete]'); if (remove) { const item = eventById(remove.dataset.delete); if (item && window.confirm(`Hapus event “${item.title}”?`)) { state.events = state.events.filter((eventItem) => eventItem.id !== item.id); state.registrants = state.registrants.filter((registrant) => registrant.eventId !== item.id); render(); showToast('Event dan data pesertanya dihapus.'); } } });
-eventForm.addEventListener('click', (event) => { const button = event.target.closest('[data-save-status]'); if (button) saveEvent(button.dataset.saveStatus); });
-app.addEventListener('submit', (event) => { event.preventDefault(); if (event.target.id === 'registration-form') registerParticipant(event.target); if (event.target.id === 'checkin-form') processCheckIn(event.target); });
+function eventCard(event) {
+  const full = event.registered >= event.capacity;
+  return `
+    <article class="event-card">
+      <div class="event-card-head">
+        ${statusBadge(event.status)}
+        <span class="section-kicker">${event.category}</span>
+      </div>
+      <h2>${event.title}</h2>
+      <p class="event-meta">${formatDate(event.date)} · ${event.location}</p>
+      <div class="event-capacity">
+        <span>${event.registered} pendaftar</span>
+        <strong>${event.capacity} kapasitas</strong>
+      </div>
+      <div class="progress"><i style="width:${Math.min(100, event.registered / event.capacity * 100)}%"></i></div>
+      <div class="card-actions">
+        <button class="action-button" type="button" data-edit="${event.id}">Ubah</button>
+        ${event.status === 'Draft' ? `<button class="action-button" type="button" data-publish="${event.id}">Terbitkan</button>` : ''}
+        <button class="action-button danger" type="button" data-delete="${event.id}" aria-label="Hapus ${event.title}">Hapus</button>
+      </div>
+      ${full ? '<p class="form-error">Kapasitas telah penuh.</p>' : ''}
+    </article>
+  `;
+}
+
+function renderEvents() {
+  app.innerHTML = `
+    <section class="view-toolbar">
+      <div>
+        <p class="eyebrow">MANAJEMEN EVENT</p>
+        <h1>Data event</h1>
+      </div>
+      <button class="primary-button" type="button" data-create-event>＋ Buat event</button>
+    </section>
+    <section class="event-grid" aria-label="Daftar event">
+      ${state.events.map(eventCard).join('') || '<div class="empty-state">Belum ada event. Buat event pertama Anda.</div>'}
+    </section>
+  `;
+}
+
+function registrationOptions() {
+  return publishedEvents()
+    .filter((event) => event.registered < event.capacity)
+    .map((event) => `<option value="${event.id}">${event.title} — ${event.registered}/${event.capacity}</option>`)
+    .join('');
+}
+
+function renderRegistration() {
+  const options = registrationOptions();
+  app.innerHTML = `
+    <section class="view-toolbar">
+      <div>
+        <p class="eyebrow">PENDAFTARAN PUBLIK</p>
+        <h1>Daftar ke event</h1>
+      </div>
+    </section>
+    ${lastRegistration ? `
+      <section class="registration-result">
+        <div>
+          <p class="eyebrow">PENDAFTARAN BERHASIL</p>
+          <strong>${lastRegistration.name}, pendaftaran Anda tercatat.</strong>
+          <p class="lede">Simpan kode berikut untuk kebutuhan presensi.</p>
+        </div>
+        <code class="registration-code">${lastRegistration.code}</code>
+      </section>
+    ` : ''}
+    <section class="registration-layout">
+      <form class="panel form-panel" id="registration-form" novalidate>
+        <h2>Data peserta</h2>
+        ${options ? `
+          <div class="form-grid">
+            <label class="field field-full">Event
+              <select name="eventId" required>
+                <option value="">Pilih event</option>
+                ${options}
+              </select>
+              <small>Hanya event terbit dengan kapasitas tersedia yang ditampilkan.</small>
+            </label>
+            <label class="field field-full">Nama lengkap
+              <input name="name" required maxlength="80" autocomplete="name" placeholder="Nama sesuai identitas">
+            </label>
+            <label class="field">Email
+              <input name="email" type="email" required autocomplete="email" placeholder="nama@contoh.com">
+            </label>
+            <label class="field">Nomor WhatsApp
+              <input name="phone" type="tel" required pattern="[0-9+() -]{8,20}" autocomplete="tel" placeholder="0812 3456 7890">
+            </label>
+          </div>
+          <p class="form-error" id="registration-error" role="alert"></p>
+          <button class="primary-button" type="submit">Kirim pendaftaran</button>
+        ` : '<div class="empty-state">Belum ada event terbit yang tersedia untuk pendaftaran.</div>'}
+      </form>
+      <aside class="panel registration-note">
+        <p class="section-kicker">SEBELUM MENDAFTAR</p>
+        <h2>Proses singkat dan jelas</h2>
+        <p>Kode registrasi dibuat di perangkat ini setelah formulir berhasil dikirim.</p>
+        <ul>
+          <li>Pastikan nama dan email sudah benar.</li>
+          <li>Satu pengiriman menambah satu peserta pada kapasitas event.</li>
+          <li>Data bersifat mock dan tersimpan selama halaman terbuka.</li>
+        </ul>
+      </aside>
+    </section>
+  `;
+}
+
+function filteredRegistrants() {
+  const { query, eventId, status } = registrantFilters;
+  return state.registrants.filter((registrant) => 
+    (!eventId || registrant.eventId === eventId) && 
+    (!status || String(registrant.present) === status) && 
+    (!query || `${registrant.name} ${registrant.email} ${registrant.code}`.toLowerCase().includes(query))
+  );
+}
+
+function detailPanel() {
+  const registrant = state.registrants.find((item) => item.id === selectedRegistrantId);
+  if (!registrant) {
+    return `
+      <aside class="panel detail-panel">
+        <p class="section-kicker">DETAIL PESERTA</p>
+        <h2>Pilih peserta</h2>
+        <p class="lede">Gunakan tombol Detail pada tabel untuk melihat informasi lengkap.</p>
+      </aside>
+    `;
+  }
+  
+  const event = eventById(registrant.eventId);
+  return `
+    <aside class="panel detail-panel">
+      <p class="section-kicker">DETAIL PESERTA</p>
+      <h2>${registrant.name}</h2>
+      ${presenceBadge(registrant.present)}
+      <dl>
+        <div><dt>Kode registrasi</dt><dd>${registrant.code}</dd></div>
+        <div><dt>Email</dt><dd>${registrant.email}</dd></div>
+        <div><dt>WhatsApp</dt><dd>${registrant.phone}</dd></div>
+        <div><dt>Event</dt><dd>${event.title}</dd></div>
+        <div><dt>Check-in</dt><dd>${registrant.checkedInAt || 'Belum check-in'}</dd></div>
+      </dl>
+    </aside>
+  `;
+}
+
+function registrantRows(items) {
+  return items.map((registrant) => `
+    <tr>
+      <td data-label="Peserta">
+        <strong>${registrant.name}</strong>
+        <small>${registrant.email}</small>
+      </td>
+      <td data-label="Event">${eventById(registrant.eventId).title}</td>
+      <td data-label="Kode"><code>${registrant.code}</code></td>
+      <td data-label="Status">${presenceBadge(registrant.present)}</td>
+      <td data-label="Aksi">
+        <button class="action-button" type="button" data-detail="${registrant.id}">Detail</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderRegistrants() {
+  const items = filteredRegistrants();
+  app.innerHTML = `
+    <section class="view-toolbar">
+      <div>
+        <p class="eyebrow">PESERTA EVENT</p>
+        <h1>Data pendaftar</h1>
+      </div>
+      <button class="secondary-button" type="button" data-switch-view="registrasi">＋ Tambah pendaftar</button>
+    </section>
+    <section class="registrant-layout">
+      <div class="panel table-panel">
+        <div class="filter-row">
+          <label class="search-field">Cari peserta atau kode
+            <input id="registrant-search" type="search" value="${registrantFilters.query}" placeholder="Nama atau kode registrasi">
+          </label>
+          <label class="filter-field">Event
+            <select id="registrant-event-filter">${eventOptions(registrantFilters.eventId)}</select>
+          </label>
+          <label class="filter-field">Status
+            <select id="registrant-status-filter">
+              <option value="">Semua status</option>
+              <option value="true" ${registrantFilters.status === 'true' ? 'selected' : ''}>Sudah hadir</option>
+              <option value="false" ${registrantFilters.status === 'false' ? 'selected' : ''}>Belum hadir</option>
+            </select>
+          </label>
+        </div>
+        <p class="table-summary"><strong>${items.length}</strong> peserta ditemukan</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Peserta</th>
+                <th>Event</th>
+                <th>Kode</th>
+                <th>Status</th>
+                <th><span class="sr-only">Aksi</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${registrantRows(items) || '<tr><td colspan="5" class="table-empty">Tidak ada peserta yang sesuai.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      ${detailPanel()}
+    </section>
+  `;
+}
+
+function renderCheckIn() {
+  const options = publishedEvents().map((event) => 
+    `<option value="${event.id}" ${event.id === checkInEventId ? 'selected' : ''}>${event.title}</option>`
+  ).join('');
+  
+  const result = checkInFeedback ? `
+    <section class="checkin-result ${checkInFeedback.type}">
+      <p class="eyebrow">${checkInFeedback.type === 'success' ? 'CHECK-IN BERHASIL' : checkInFeedback.type === 'pending' ? 'KONFIRMASI PRESENSI' : 'CHECK-IN TIDAK DAPAT DIPROSES'}</p>
+      <strong>${checkInFeedback.title}</strong>
+      <p>${checkInFeedback.message}</p>
+      ${checkInFeedback.type === 'pending' ? `<button class="primary-button" type="button" data-confirm-checkin="${checkInFeedback.id}">Konfirmasi kehadiran</button>` : ''}
+    </section>
+  ` : '';
+  
+  app.innerHTML = `
+    <section class="view-toolbar">
+      <div>
+        <p class="eyebrow">HARI-H EVENT</p>
+        <h1>Presensi peserta</h1>
+      </div>
+    </section>
+    <section class="checkin-layout">
+      <form class="panel checkin-form" id="checkin-form" novalidate>
+        <p class="section-kicker">CHECK-IN MANUAL</p>
+        <h2>Masukkan kode registrasi</h2>
+        <label class="field">Event
+          <select name="eventId" id="checkin-event" required>
+            ${options}
+          </select>
+        </label>
+        <label class="field">Kode registrasi
+          <input name="code" required autocomplete="off" placeholder="Contoh: EF-101-0003">
+        </label>
+        <p class="form-error" id="checkin-error" role="alert"></p>
+        <button class="primary-button" type="submit">Cari peserta</button>
+      </form>
+      <aside class="panel checkin-note">
+        <p class="section-kicker">PANDUAN</p>
+        <h2>Satu kali presensi</h2>
+        <p>Sistem memeriksa kecocokan kode dan event sebelum kehadiran dapat dikonfirmasi.</p>
+        <ul>
+          <li>Kode tidak ditemukan akan ditolak.</li>
+          <li>Kode dari event lain akan ditandai.</li>
+          <li>Check-in ulang tidak dapat diproses.</li>
+        </ul>
+      </aside>
+    </section>
+    ${result}
+  `;
+}
+
+function render() {
+  if (currentView === 'event') renderEvents();
+  else if (currentView === 'registrasi') renderRegistration();
+  else if (currentView === 'pendaftar') renderRegistrants();
+  else if (currentView === 'presensi') renderCheckIn();
+  else renderDashboard();
+  
+  updateNavigation();
+  
+  const titles = { dashboard: 'Dashboard', event: 'Data Event', registrasi: 'Pendaftaran', pendaftar: 'Data Pendaftar', presensi: 'Presensi' };
+  document.querySelector('#breadcrumb').innerHTML = `OVERVIEW <strong>/ ${titles[currentView]}</strong>`;
+}
+
+function openEventDialog(id = '') {
+  const event = eventById(id);
+  eventForm.reset();
+  document.querySelector('#event-error').textContent = '';
+  document.querySelector('#event-dialog-title').textContent = event ? 'Ubah event' : 'Buat event';
+  document.querySelector('#event-id').value = event?.id || '';
+  
+  if (event) {
+    ['title', 'category', 'date', 'location', 'capacity'].forEach((field) => {
+      document.querySelector(`#event-${field}`).value = event[field];
+    });
+  }
+  
+  dialog.showModal();
+  document.querySelector('#event-title').focus();
+}
+
+function saveEvent(status) {
+  if (!eventForm.reportValidity()) return;
+  
+  const fields = Object.fromEntries(new FormData(eventForm));
+  const id = fields.id || `evt-${state.nextEventId++}`;
+  const existing = eventById(id);
+  
+  const event = {
+    id,
+    title: fields.title.trim(),
+    category: fields.category,
+    date: fields.date,
+    location: fields.location.trim(),
+    capacity: Number(fields.capacity),
+    registered: existing?.registered || 0,
+    status
+  };
+  
+  if (event.capacity < event.registered) {
+    document.querySelector('#event-error').textContent = 'Kapasitas tidak boleh lebih kecil dari jumlah pendaftar saat ini.';
+    return;
+  }
+  
+  if (existing) {
+    state.events[state.events.indexOf(existing)] = event;
+  } else {
+    state.events.push(event);
+  }
+  
+  dialog.close();
+  render();
+  showToast(`Event ${status === 'Published' ? 'diterbitkan' : 'disimpan sebagai draft'}.`);
+}
+
+function registerParticipant(form) {
+  if (!form.reportValidity()) return;
+  
+  const fields = Object.fromEntries(new FormData(form));
+  const event = eventById(fields.eventId);
+  
+  if (!event || event.status !== 'Published' || event.registered >= event.capacity) {
+    document.querySelector('#registration-error').textContent = 'Event tidak tersedia. Pilih event lain.';
+    return;
+  }
+  
+  event.registered += 1;
+  const code = `EF-${event.id.replace('evt-', '')}-${String(event.registered).padStart(4, '0')}`;
+  
+  state.registrants.push({
+    id: `reg-${String(state.nextRegistrantId++).padStart(3, '0')}`,
+    eventId: event.id,
+    code,
+    name: fields.name.trim(),
+    email: fields.email.trim(),
+    phone: fields.phone.trim(),
+    present: false,
+    checkedInAt: null
+  });
+  
+  lastRegistration = { name: fields.name.trim(), code };
+  renderRegistration();
+  showToast('Pendaftaran berhasil disimpan.');
+}
+
+function processCheckIn(form) {
+  if (!form.reportValidity()) return;
+  
+  const fields = Object.fromEntries(new FormData(form));
+  checkInEventId = fields.eventId;
+  const code = fields.code.trim().toUpperCase();
+  const registrant = state.registrants.find((item) => item.code === code);
+  
+  if (!registrant) {
+    checkInFeedback = { type: 'error', title: 'Kode tidak ditemukan', message: `Kode ${code} tidak terdaftar pada data peserta.` };
+  } else if (registrant.eventId !== fields.eventId) {
+    checkInFeedback = { type: 'error', title: 'Event tidak sesuai', message: `${registrant.name} terdaftar untuk ${eventById(registrant.eventId).title}.` };
+  } else if (registrant.present) {
+    checkInFeedback = { type: 'error', title: 'Presensi sudah tercatat', message: `${registrant.name} sudah check-in pada ${registrant.checkedInAt}.` };
+  } else {
+    checkInFeedback = { type: 'pending', id: registrant.id, title: registrant.name, message: `${registrant.code} · ${eventById(registrant.eventId).title}` };
+  }
+  
+  renderCheckIn();
+}
+
+function confirmCheckIn(id) {
+  const registrant = state.registrants.find((item) => item.id === id);
+  if (!registrant || registrant.present) return;
+  
+  registrant.present = true;
+  registrant.checkedInAt = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+  checkInFeedback = { type: 'success', title: `${registrant.name} berhasil check-in`, message: `Kehadiran tercatat pada ${registrant.checkedInAt}.` };
+  
+  renderCheckIn();
+  showToast('Presensi berhasil dicatat.');
+}
+
+document.querySelector('#open-menu').addEventListener('click', () => setMenu(true));
+document.querySelector('#close-menu').addEventListener('click', () => setMenu(false));
+overlay.addEventListener('click', () => setMenu(false));
+document.querySelector('#close-dialog').addEventListener('click', () => dialog.close());
+document.querySelector('#close-toast').addEventListener('click', () => toast.classList.remove('show'));
+
+document.querySelector('[data-view-link]').addEventListener('click', (event) => {
+  event.preventDefault();
+  currentView = 'dashboard';
+  render();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && sidebar.classList.contains('open')) {
+    setMenu(false);
+    document.querySelector('#open-menu').focus();
+  }
+});
+
+document.addEventListener('input', (event) => {
+  if (event.target.id === 'registrant-search') {
+    registrantFilters.query = event.target.value.toLowerCase().trim();
+    renderRegistrants();
+    document.querySelector('#registrant-search').focus();
+  }
+});
+
+document.addEventListener('change', (event) => {
+  if (event.target.id === 'registrant-event-filter') {
+    registrantFilters.eventId = event.target.value;
+    renderRegistrants();
+  }
+  if (event.target.id === 'registrant-status-filter') {
+    registrantFilters.status = event.target.value;
+    renderRegistrants();
+  }
+});
+
+document.addEventListener('click', (event) => {
+  const view = event.target.closest('[data-view]');
+  if (view) {
+    currentView = view.dataset.view;
+    render();
+    setMenu(false);
+    return;
+  }
+  
+  if (event.target.closest('[data-create-event]')) {
+    openEventDialog();
+    return;
+  }
+  
+  const switchView = event.target.closest('[data-switch-view]');
+  if (switchView) {
+    currentView = switchView.dataset.switchView;
+    render();
+    return;
+  }
+  
+  const edit = event.target.closest('[data-edit]');
+  if (edit) {
+    openEventDialog(edit.dataset.edit);
+    return;
+  }
+  
+  const publish = event.target.closest('[data-publish]');
+  if (publish) {
+    eventById(publish.dataset.publish).status = 'Published';
+    render();
+    showToast('Event diterbitkan.');
+    return;
+  }
+  
+  const detail = event.target.closest('[data-detail]');
+  if (detail) {
+    selectedRegistrantId = detail.dataset.detail;
+    renderRegistrants();
+    return;
+  }
+  
+  const confirm = event.target.closest('[data-confirm-checkin]');
+  if (confirm) {
+    confirmCheckIn(confirm.dataset.confirmCheckin);
+    return;
+  }
+  
+  const remove = event.target.closest('[data-delete]');
+  if (remove) {
+    const item = eventById(remove.dataset.delete);
+    if (item && window.confirm(`Hapus event “${item.title}”?`)) {
+      state.events = state.events.filter((eventItem) => eventItem.id !== item.id);
+      state.registrants = state.registrants.filter((registrant) => registrant.eventId !== item.id);
+      render();
+      showToast('Event dan data pesertanya dihapus.');
+    }
+  }
+});
+
+eventForm.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-save-status]');
+  if (button) saveEvent(button.dataset.saveStatus);
+});
+
+app.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (event.target.id === 'registration-form') registerParticipant(event.target);
+  if (event.target.id === 'checkin-form') processCheckIn(event.target);
+});
+
 render();
