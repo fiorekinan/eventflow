@@ -1,0 +1,282 @@
+{
+  "info": {
+    "_postman_id": "9b12a86c-482a-4318-bfe0-e129da485123",
+    "name": "EventFlow REST API",
+    "description": "Postman Collection lengkap untuk EventFlow REST API (Node.js, Express, MySQL Railway). Berisi semua operasi CRUD untuk Events dan Registrants beserta filter query dan endpoint presensi check-in.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL untuk API lokal atau Railway (ganti dengan URL deployment Railway Anda)"
+    }
+  ],
+  "item": [
+    {
+      "name": "General & Health",
+      "item": [
+        {
+          "name": "Root Information",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Mendapatkan informasi umum dan daftar endpoint API."
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Mengecek konektivitas database MySQL dan status server."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"]
+            },
+            "description": "Mengambil seluruh daftar event."
+          }
+        },
+        {
+          "name": "Get All Events (With Filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events?category=Konferensi&status=Published&search=Tech",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"],
+              "query": [
+                { "key": "category", "value": "Konferensi" },
+                { "key": "status", "value": "Published" },
+                { "key": "search", "value": "Tech" }
+              ]
+            },
+            "description": "Mencari event berdasarkan kategori, status publikasi, atau kata kunci judul/lokasi."
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/evt-101",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "evt-101"]
+            },
+            "description": "Mengambil rincian event beserta daftar peserta yang terdaftar."
+          }
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt-104\",\n  \"title\": \"AI & Cloud Engineering Summit 2026\",\n  \"category\": \"Konferensi\",\n  \"date\": \"2026-11-12\",\n  \"location\": \"Jakarta Convention Center\",\n  \"capacity\": 350,\n  \"status\": \"Published\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"]
+            },
+            "description": "Membuat event baru. Jika 'id' dikosongkan, API akan men-generate otomatis."
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AI & Cloud Engineering Summit 2026 (Updated)\",\n  \"capacity\": 400,\n  \"status\": \"Published\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/evt-104",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "evt-104"]
+            },
+            "description": "Memperbarui informasi event berdasarkan ID."
+          }
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/evt-104",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "evt-104"]
+            },
+            "description": "Menghapus event beserta semua pendaftar terkait secara cascade."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registrants",
+      "item": [
+        {
+          "name": "Get All Registrants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants"]
+            },
+            "description": "Mengambil seluruh daftar pendaftar dari semua event."
+          }
+        },
+        {
+          "name": "Filter Registrants by Event & Attendance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants?event_id=evt-101&present=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants"],
+              "query": [
+                { "key": "event_id", "value": "evt-101" },
+                { "key": "present", "value": "true" }
+              ]
+            },
+            "description": "Filter data pendaftar pada event tertentu yang sudah hadir / presensi."
+          }
+        },
+        {
+          "name": "Get Registrant by ID or Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants/EF-101-0001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants", "EF-101-0001"]
+            },
+            "description": "Mencari pendaftar berdasarkan ID (misal: reg-001) atau kode tiket (misal: EF-101-0001)."
+          }
+        },
+        {
+          "name": "Create / Register Participant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt-101\",\n  \"name\": \"Fahri Gunawan\",\n  \"email\": \"fahri@contoh.id\",\n  \"phone\": \"081234567899\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants"]
+            },
+            "description": "Mendaftarkan peserta baru ke dalam event. Kolom 'id' dan 'code' tiket akan di-generate otomatis jika tidak diisi, dan jumlah 'registered' pada tabel events bertambah 1."
+          }
+        },
+        {
+          "name": "Update Registrant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fahri Gunawan, S.Kom.\",\n  \"phone\": \"081299990000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants/reg-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants", "reg-001"]
+            },
+            "description": "Memperbarui informasi biodata peserta."
+          }
+        },
+        {
+          "name": "Check-In / Presensi Kehadiran",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checked_in_at\": \"10:15:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants/EF-101-0003/check-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants", "EF-101-0003", "check-in"]
+            },
+            "description": "Melakukan check-in presensi (dapat menggunakan ID atau kode tiket). Jika checked_in_at tidak dikirimkan, API menggunakan jam server saat ini."
+          }
+        },
+        {
+          "name": "Delete Registrant",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/registrants/reg-003",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "registrants", "reg-003"]
+            },
+            "description": "Menghapus peserta pendaftar dan otomatis mengurangi jumlah 'registered' pada event terkait."
+          }
+        }
+      ]
+    }
+  ]
+}
